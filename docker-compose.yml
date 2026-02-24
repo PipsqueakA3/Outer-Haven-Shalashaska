@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: outerhaven
+      POSTGRES_PASSWORD: outerhaven
+      POSTGRES_DB: outerhaven
+    ports: ['5432:5432']
+    volumes: ['pgdata:/var/lib/postgresql/data']
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://outerhaven:outerhaven@db:5432/outerhaven
+      JWT_SECRET: change_me_please
+    depends_on: [db]
+    ports: ['3001:3001']
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on: [api]
+    ports: ['3000:3000']
+volumes:
+  pgdata:
