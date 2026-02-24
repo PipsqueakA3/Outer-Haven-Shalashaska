@@ -4,5 +4,6 @@ COPY package*.json ./
 COPY apps/api/package*.json apps/api/
 RUN npm install
 COPY . .
+RUN npm run prisma:generate -w apps/api
 RUN npm run build -w apps/api
 CMD ["sh", "-c", "cd apps/api && npx prisma generate && npm run start"]
