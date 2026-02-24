@@ -5,9 +5,9 @@ import { TaskPriority, TaskStatus } from '@prisma/client';
 import { TasksService } from './tasks.service';
 
 class CreateTaskDto {
-  @IsString() stageId: string;
+  @IsString() stageId!: string;
   @IsOptional() @IsString() parentTaskId?: string;
-  @IsString() title: string;
+  @IsString() title!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsEnum(TaskStatus) status?: TaskStatus;
   @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;

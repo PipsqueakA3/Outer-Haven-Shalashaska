@@ -7,11 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { ADMIN MANAGER VIEWER }
-enum TaskStatus { TODO IN_PROGRESS DONE BLOCKED }
-enum TaskPriority { LOW MEDIUM HIGH CRITICAL }
-enum RoadmapNodeType { STAGE TASK SUBTASK NOTE RESOURCE }
-enum LinkType { GOOGLE_DOC GOOGLE_SHEET GOOGLE_SLIDES YANDEX_DISK OTHER }
+enum Role {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RoadmapNodeType {
+  STAGE
+  TASK
+  SUBTASK
+  NOTE
+  RESOURCE
+}
+
+enum LinkType {
+  GOOGLE_DOC
+  GOOGLE_SHEET
+  GOOGLE_SLIDES
+  YANDEX_DISK
+  OTHER
+}
 
 model User {
   id String @id @default(cuid())

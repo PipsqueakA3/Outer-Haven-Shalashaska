@@ -5,12 +5,12 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { PrismaService } from '../common/prisma.service';
 
 class CreateLinkDto {
-  @IsString() brandId: string;
-  @IsString() title: string;
-  @IsUrl() url: string;
-  @IsEnum(LinkType) type: LinkType;
-  @IsArray() tags: string[];
-  @IsString() creatorName: string;
+  @IsString() brandId!: string;
+  @IsString() title!: string;
+  @IsUrl() url!: string;
+  @IsEnum(LinkType) type!: LinkType;
+  @IsArray() tags!: string[];
+  @IsString() creatorName!: string;
   @IsOptional() @IsString() comment?: string;
 }
 

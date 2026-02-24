@@ -4,8 +4,8 @@ import { JwtAuthGuard } from './jwt.guard';
 import { AuthService } from './auth.service';
 
 class LoginDto {
-  @IsEmail() email: string;
-  @IsString() @MinLength(8) password: string;
+  @IsEmail() email!: string;
+  @IsString() @MinLength(8) password!: string;
 }
 
 @Controller('auth')

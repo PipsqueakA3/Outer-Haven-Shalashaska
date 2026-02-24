@@ -5,10 +5,10 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { PrismaService } from '../common/prisma.service';
 
 class NodeDto {
-  @IsString() label: string;
-  @IsEnum(RoadmapNodeType) type: RoadmapNodeType;
-  @IsNumber() x: number;
-  @IsNumber() y: number;
+  @IsString() label!: string;
+  @IsEnum(RoadmapNodeType) type!: RoadmapNodeType;
+  @IsNumber() x!: number;
+  @IsNumber() y!: number;
 }
 
 @UseGuards(JwtAuthGuard)
