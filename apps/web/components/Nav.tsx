@@ -16,7 +16,7 @@ export function Nav() {
 
   return (
     <div className="header">
-      <div className="container nav" style={{ justifyContent: 'space-between' }}>
+      <div className="container nav">
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {items.map(([name, href]) => (
             <Link key={href} href={href} className="badge" style={{ background: pathname === href ? '#dbeafe' : '#f2f4f7' }}>
@@ -24,7 +24,6 @@ export function Nav() {
             </Link>
           ))}
         </div>
-        <span className="badge" style={{ background: '#ecfdf3' }}>Режим без входа: ADMIN</span>
       </div>
     </div>
   );
