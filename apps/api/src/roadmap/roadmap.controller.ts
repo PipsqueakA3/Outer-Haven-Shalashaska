@@ -16,6 +16,13 @@ class NodeDto {
 export class RoadmapController {
   constructor(private prisma: PrismaService) {}
 
+  @Get()
+  async listDefault() {
+    const brand = await this.prisma.brand.findFirst();
+    if (!brand) return [];
+    return this.prisma.roadmapBoard.findMany({ where: { brandId: brand.id }, include: { nodes: true } });
+  }
+
   @Get(':brandId')
   list(@Param('brandId') brandId: string) {
     return this.prisma.roadmapBoard.findMany({ where: { brandId }, include: { nodes: true } });
