@@ -1,8 +1,23 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { API_URL, LoginResponse, setToken } from '../../lib/api';
+import { API_URL, LoginResponse, getToken, setToken } from '../../lib/api';
+
+type ApiError = { message?: string | string[]; error?: string };
+
+function extractErrorMessage(raw: string, fallback: string) {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw) as ApiError;
+    if (Array.isArray(parsed.message)) return parsed.message.join(', ');
+    if (typeof parsed.message === 'string' && parsed.message.trim()) return parsed.message;
+    if (typeof parsed.error === 'string' && parsed.error.trim()) return parsed.error;
+    return fallback;
+  } catch {
+    return raw;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +26,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const hint = useMemo(() => 'Тестовый админ: admin@outerhaven.local / Admin123!', []);
+
+  useEffect(() => {
+    if (getToken()) router.replace('/dashboard');
+  }, [router]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,12 +40,12 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password })
       });
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || 'Ошибка входа');
+        throw new Error(extractErrorMessage(text, 'Не удалось выполнить вход. Проверьте email/пароль.'));
       }
 
       const data = (await res.json()) as LoginResponse;
@@ -34,7 +53,12 @@ export default function LoginPage() {
       localStorage.setItem('outerhaven_user', JSON.stringify(data.user));
       router.push('/dashboard');
     } catch (err: any) {
-      setError('Не удалось выполнить вход. Проверьте email/пароль и доступность API.');
+      const isNetworkError = String(err?.message || '').toLowerCase().includes('failed to fetch');
+      setError(
+        isNetworkError
+          ? 'API недоступен. Проверьте, что backend запущен на http://localhost:3001 и разрешён CORS.'
+          : err?.message || 'Не удалось выполнить вход. Проверьте email/пароль и доступность API.'
+      );
       console.error(err);
     } finally {
       setLoading(false);
