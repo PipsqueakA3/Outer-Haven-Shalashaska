@@ -16,6 +16,10 @@ export default function LoginPage() {
   }, [router]);
 
 
+  useEffect(() => {
+    if (getToken()) router.replace('/dashboard');
+  }, [router]);
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +29,7 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password })
       });
 
       if (!res.ok) {
