@@ -4,20 +4,6 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { API_URL, LoginResponse, getToken, setToken } from '../../lib/api';
 
-type LoginApiError = { message?: string | string[]; error?: string; statusCode?: number };
-
-function getReadableError(payload: string): string {
-  try {
-    const parsed = JSON.parse(payload) as LoginApiError;
-    if (Array.isArray(parsed.message)) return parsed.message.join(', ');
-    if (typeof parsed.message === 'string' && parsed.message.trim()) return parsed.message;
-    if (parsed.error) return parsed.error;
-  } catch {
-    if (payload.trim()) return payload;
-  }
-  return 'Не удалось выполнить вход. Проверьте email/пароль и доступность API.';
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('admin@outerhaven.local');
@@ -44,7 +30,7 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(getReadableError(text));
+        throw new Error(text || 'Ошибка входа');
       }
 
       const data = (await res.json()) as LoginResponse;
@@ -52,7 +38,7 @@ export default function LoginPage() {
       localStorage.setItem('outerhaven_user', JSON.stringify(data.user));
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err?.message || 'Не удалось выполнить вход. Проверьте email/пароль и доступность API.');
+      setError('Не удалось выполнить вход. Проверьте email/пароль и доступность API.');
       console.error(err);
     } finally {
       setLoading(false);
