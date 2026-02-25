@@ -4,13 +4,14 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { API_URL, LoginResponse, getToken, setToken } from '../../lib/api';
 
-type LoginApiError = { message?: string | string[] };
+type LoginApiError = { message?: string | string[]; error?: string; statusCode?: number };
 
 function getReadableError(payload: string): string {
   try {
     const parsed = JSON.parse(payload) as LoginApiError;
     if (Array.isArray(parsed.message)) return parsed.message.join(', ');
     if (typeof parsed.message === 'string' && parsed.message.trim()) return parsed.message;
+    if (parsed.error) return parsed.error;
   } catch {
     if (payload.trim()) return payload;
   }
