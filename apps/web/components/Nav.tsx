@@ -1,8 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { clearSession, getToken } from '../lib/api';
+import { usePathname } from 'next/navigation';
 
 const items = [
   ['Дашборд', '/dashboard'],
@@ -15,18 +13,6 @@ const items = [
 
 export function Nav() {
   const pathname = usePathname();
-  const router = useRouter();
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    setLoggedIn(Boolean(getToken()));
-  }, [pathname]);
-
-  function logout() {
-    clearSession();
-    setLoggedIn(false);
-    router.push('/login');
-  }
 
   return (
     <div className="header">
@@ -38,17 +24,7 @@ export function Nav() {
             </Link>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {!loggedIn ? (
-            <Link href="/login" className="badge" style={{ background: pathname === '/login' ? '#dbeafe' : '#f2f4f7' }}>
-              Вход
-            </Link>
-          ) : (
-            <button type="button" className="badge" style={{ border: 0, cursor: 'pointer' }} onClick={logout}>
-              Выйти
-            </button>
-          )}
-        </div>
+        <span className="badge" style={{ background: '#ecfdf3' }}>Режим без входа: ADMIN</span>
       </div>
     </div>
   );
