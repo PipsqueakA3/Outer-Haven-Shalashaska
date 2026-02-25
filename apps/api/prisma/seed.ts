@@ -21,15 +21,24 @@ async function main() {
     }
   });
 
-  await prisma.brand.deleteMany({ where: { slug: 'outer-haven' } });
-
-  const brand = await prisma.brand.create({
-    data: {
+  const brand = await prisma.brand.upsert({
+    where: { slug: 'outer-haven' },
+    update: {
+      name: 'Outer Haven',
+      description: 'Запуск нового бренда женской одежды'
+    },
+    create: {
       slug: 'outer-haven',
       name: 'Outer Haven',
       description: 'Запуск нового бренда женской одежды'
     }
   });
+
+  await prisma.task.deleteMany({ where: { stage: { brandId: brand.id } } });
+  await prisma.stage.deleteMany({ where: { brandId: brand.id } });
+  await prisma.knowledgeItem.deleteMany({ where: { brandId: brand.id } });
+  await prisma.roadmapBoard.deleteMany({ where: { brandId: brand.id } });
+  await prisma.launchLayer.deleteMany({ where: { brandId: brand.id } });
 
   const strategy = await prisma.stage.create({ data: { brandId: brand.id, order: 1, title: 'Стратегия и позиционирование', progress: 45 } });
   await prisma.stage.create({ data: { brandId: brand.id, order: 2, title: 'Производство и поставщики', progress: 30 } });

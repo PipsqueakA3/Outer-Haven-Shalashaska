@@ -35,17 +35,20 @@ export function Nav() {
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {user ? <span className="badge">{user.name} ({user.role})</span> : null}
-          <Link href="/login" className="badge">Логин</Link>
-          <button
-            className="badge"
-            style={{ border: 0, cursor: 'pointer' }}
-            onClick={() => {
-              clearSession();
-              router.push('/login');
-            }}
-          >
-            Выход
-          </button>
+          {!user ? (
+            <Link href="/login" className="badge">Логин</Link>
+          ) : (
+            <button
+              className="badge"
+              style={{ border: 0, cursor: 'pointer' }}
+              onClick={() => {
+                clearSession();
+                router.push('/login');
+              }}
+            >
+              Выход
+            </button>
+          )}
         </div>
       </div>
     </div>
