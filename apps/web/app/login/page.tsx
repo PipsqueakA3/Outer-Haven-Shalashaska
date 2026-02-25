@@ -1,8 +1,8 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { API_URL, LoginResponse, setToken } from '../../lib/api';
+import { API_URL, LoginResponse, getToken, setToken } from '../../lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +11,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const hint = useMemo(() => 'Тестовый админ: admin@outerhaven.local / Admin123!', []);
+  useEffect(() => {
+    if (getToken()) router.replace('/dashboard');
+  }, [router]);
+
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
