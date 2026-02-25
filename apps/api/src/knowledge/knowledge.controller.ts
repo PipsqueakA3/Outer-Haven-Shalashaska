@@ -1,31 +1,54 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { LinkType } from '@prisma/client';
-import { IsArray, IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt.guard';
-import { PrismaService } from '../common/prisma.service';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { CreateKnowledgeItemDto, CreateTagDto, ListKnowledgeItemsQueryDto, UpdateKnowledgeItemDto } from './dto';
+import { KnowledgeService } from './knowledge.service';
 
-class CreateLinkDto {
-  @IsString() brandId!: string;
-  @IsString() title!: string;
-  @IsUrl() url!: string;
-  @IsEnum(LinkType) type!: LinkType;
-  @IsArray() tags!: string[];
-  @IsString() creatorName!: string;
-  @IsOptional() @IsString() comment?: string;
-}
-
-@UseGuards(JwtAuthGuard)
-@Controller('knowledge')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+@Controller()
 export class KnowledgeController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private knowledgeService: KnowledgeService) {}
 
-  @Get()
-  list(@Query('search') search?: string) {
-    return this.prisma.knowledgeItem.findMany({ where: search ? { title: { contains: search, mode: 'insensitive' } } : {}, orderBy: { updatedAt: 'desc' } });
+  @Get('knowledge-items')
+  list(@Query() query: ListKnowledgeItemsQueryDto) {
+    return this.knowledgeService.list(query);
   }
 
-  @Post()
-  create(@Body() dto: CreateLinkDto) {
-    return this.prisma.knowledgeItem.create({ data: dto });
+  @Get('knowledge-items/meta/filters')
+  getMetaFilters() {
+    return this.knowledgeService.getMetaFilters();
+  }
+
+  @Get('knowledge-items/:id')
+  getById(@Param('id') id: string) {
+    return this.knowledgeService.getById(id);
+  }
+
+  @Post('knowledge-items')
+  create(@Body() dto: CreateKnowledgeItemDto, @Req() req: any) {
+    return this.knowledgeService.create(dto, req.user.userId);
+  }
+
+  @Patch('knowledge-items/:id')
+  update(@Param('id') id: string, @Body() dto: UpdateKnowledgeItemDto) {
+    return this.knowledgeService.update(id, dto);
+  }
+
+  @Delete('knowledge-items/:id')
+  remove(@Param('id') id: string) {
+    return this.knowledgeService.remove(id);
+  }
+
+  @Get('tags')
+  listTags() {
+    return this.knowledgeService.listTags();
+  }
+
+  @Post('tags')
+  createTag(@Body() dto: CreateTagDto) {
+    return this.knowledgeService.createTag(dto);
   }
 }
