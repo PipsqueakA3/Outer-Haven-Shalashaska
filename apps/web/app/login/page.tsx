@@ -1,8 +1,21 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { API_URL, LoginResponse, setToken } from '../../lib/api';
+import { API_URL, LoginResponse, getToken, setToken } from '../../lib/api';
+
+type LoginApiError = { message?: string | string[] };
+
+function getReadableError(payload: string): string {
+  try {
+    const parsed = JSON.parse(payload) as LoginApiError;
+    if (Array.isArray(parsed.message)) return parsed.message.join(', ');
+    if (typeof parsed.message === 'string' && parsed.message.trim()) return parsed.message;
+  } catch {
+    if (payload.trim()) return payload;
+  }
+  return 'Не удалось выполнить вход. Проверьте email/пароль и доступность API.';
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +24,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const hint = useMemo(() => 'Тестовый админ: admin@outerhaven.local / Admin123!', []);
+
+  useEffect(() => {
+    if (getToken()) router.replace('/dashboard');
+  }, [router]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,12 +38,12 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password })
       });
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || 'Ошибка входа');
+        throw new Error(getReadableError(text));
       }
 
       const data = (await res.json()) as LoginResponse;
@@ -34,7 +51,7 @@ export default function LoginPage() {
       localStorage.setItem('outerhaven_user', JSON.stringify(data.user));
       router.push('/dashboard');
     } catch (err: any) {
-      setError('Не удалось выполнить вход. Проверьте email/пароль и доступность API.');
+      setError(err?.message || 'Не удалось выполнить вход. Проверьте email/пароль и доступность API.');
       console.error(err);
     } finally {
       setLoading(false);
