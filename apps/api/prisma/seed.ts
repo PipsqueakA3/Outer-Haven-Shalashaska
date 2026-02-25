@@ -4,23 +4,27 @@ import * as argon2 from 'argon2';
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminPassword = await argon2.hash('Mikhail_OuterHaven_2026');
+  const adminPassword = await argon2.hash('Admin123!');
 
   const admin = await prisma.user.upsert({
-    where: { email: 'mikhail@outerhaven.local' },
-    update: {},
+    where: { email: 'admin@outerhaven.local' },
+    update: {
+      displayName: 'Михаил',
+      passwordHash: adminPassword,
+      role: 'ADMIN'
+    },
     create: {
-      email: 'mikhail@outerhaven.local',
+      email: 'admin@outerhaven.local',
       displayName: 'Михаил',
       passwordHash: adminPassword,
       role: 'ADMIN'
     }
   });
 
-  const brand = await prisma.brand.upsert({
-    where: { slug: 'outer-haven' },
-    update: {},
-    create: {
+  await prisma.brand.deleteMany({ where: { slug: 'outer-haven' } });
+
+  const brand = await prisma.brand.create({
+    data: {
       slug: 'outer-haven',
       name: 'Outer Haven',
       description: 'Запуск нового бренда женской одежды'
@@ -28,7 +32,7 @@ async function main() {
   });
 
   const strategy = await prisma.stage.create({ data: { brandId: brand.id, order: 1, title: 'Стратегия и позиционирование', progress: 45 } });
-  const production = await prisma.stage.create({ data: { brandId: brand.id, order: 2, title: 'Производство и поставщики', progress: 30 } });
+  await prisma.stage.create({ data: { brandId: brand.id, order: 2, title: 'Производство и поставщики', progress: 30 } });
 
   const task = await prisma.task.create({
     data: {
@@ -62,7 +66,7 @@ async function main() {
       type: 'OTHER',
       tags: ['мудборд', 'референсы'],
       creatorName: 'Михаил',
-      accessMeta: 'mikhail@outerhaven.local, levan@outerhaven.local'
+      accessMeta: 'admin@outerhaven.local'
     }
   });
 
@@ -80,6 +84,7 @@ async function main() {
     }
   });
 
+  await prisma.unitCard.deleteMany();
   await prisma.unitCard.createMany({
     data: [
       { name: 'Михаил', avatarColor: '#5B6CFF', strength: 8, speed: 7, agility: 6, stamina: 9, loyalty: 10, focus: 9 },
@@ -97,7 +102,7 @@ async function main() {
 
   await prisma.appSetting.upsert({
     where: { key: 'task_statuses' },
-    update: {},
+    update: { value: ['To Do', 'In Progress', 'Done', 'Blocked'] },
     create: {
       key: 'task_statuses',
       value: ['To Do', 'In Progress', 'Done', 'Blocked']

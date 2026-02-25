@@ -1,71 +1,69 @@
-# Outer Haven MVP
+# Outer Haven — быстрый аудит и запуск тестового стенда
 
-## 1) Краткая архитектура
-- **Frontend**: Next.js 14 (App Router, TypeScript), адаптивный UI, модульная навигация по блокам.
-- **Backend**: NestJS + Prisma, JWT auth, защищённые API, Swagger `/api/docs`, валидация DTO.
-- **БД**: PostgreSQL (через Prisma schema), нормализованные сущности под расширение в CRM/склад/операционку.
-- **Безопасность**: Argon2 для паролей, Helmet/CORS, глобальная валидация, JWT guard, аудит-таблица.
-- **Масштабирование**: монорепо, отдельные модули, future-ready интерфейсы (Telegram, расчёты, file storage provider).
+## Что уже было
+- **Frontend** на Next.js с русским UI и рабочей навигацией по разделам (`/dashboard`, `/tasks`, `/roadmap`, `/knowledge`, `/units`, `/settings`, `/login`).
+- **Backend** на NestJS + Prisma с JWT-авторизацией и API-модулями (`auth`, `dashboard`, `tasks`, `roadmap`, `knowledge`, `units`, `settings`).
+- **DB**: PostgreSQL схема в Prisma.
 
-## 2) Сущности и связи
-`Brand -> Stage -> Task -> Subtask(Task.parentTaskId)`
+## Что исправлено в этом аудите
+- Подключил frontend-страницы к backend API (через `NEXT_PUBLIC_API_URL` и Bearer JWT).
+- Сделал рабочий login flow: форма логина, сохранение токена, переход в дашборд.
+- Добавил seed админа с полными правами:
+  - Логин: `admin@outerhaven.local`
+  - Пароль: `Admin123!`
+  - Имя: `Михаил`
+- Уточнил и стабилизировал seed для повторного запуска (пересоздание основных демо-данных бренда).
+- Пометил в UI источник данных: где **реальный API**, а где включился **временный мок fallback**.
 
-Дополнительно:
-- `RoadmapBoard -> RoadmapNode` (узел можно связать с Task)
-- `KnowledgeItem` (ссылки/ресурсы, привязка к бренду/задаче)
-- `LaunchLayer` (визуальная пирамида/дерево запуска)
-- `UnitCard` (RPG-заглушка)
-- `User/Role`, `AuditLog`, `AppSetting`
+## Что пока остаётся заглушкой
+- `POST /api/auth/otp/request` — placeholder.
+- Провайдеры в `apps/api/src/providers/*` (telegram/calc-engine/attachments) — архитектурные заготовки.
+- На frontend fallback-моки активируются, если API недоступен или нет валидного JWT.
 
-## 3) Страницы MVP
-- `/dashboard` — прогресс бренда, ключевые этапы, сроки, пирамида.
-- `/tasks` — задачи (список/канбан-ready).
-- `/roadmap` — mind-map-like схема (React Flow).
-- `/knowledge` — база знаний/ссылок.
-- `/units` — карточки юнитов (демо).
-- `/settings` — базовые словари/placeholder настройки.
-- `/login` — демо-вход.
+---
 
-## 4) В MVP сейчас vs future-ready
-### Сейчас реализовано
-- Auth login endpoint + JWT guard.
-- CRUD задач (основа), связи subtask.
-- Dashboard summary.
-- База знаний/ссылок.
-- Roadmap board/nodes + link-to-task.
-- Unit cards UI.
-- Seed демо-данных.
+## Структура проекта
+- `apps/web` — frontend (Next.js)
+- `apps/api` — backend (NestJS + Prisma)
+- `apps/api/prisma` — схема и seed базы
 
-### Future-ready placeholders
-- Telegram alerts gateway.
-- Calculation engine.
-- Attachment/FileStorage provider (пока link-only).
-- OTP flow endpoints (placeholder).
-- RBAC foundation (enum roles + JWT payload).
+## Быстрый запуск (локально)
+1. Поднять PostgreSQL (например, Docker):
+   ```bash
+   docker compose up -d db
+   ```
+2. Установить зависимости:
+   ```bash
+   npm install
+   ```
+3. Подготовить env:
+   ```bash
+   cp .env.example .env
+   ```
+4. Сгенерировать Prisma client и применить схему:
+   ```bash
+   npm run prisma:generate -w apps/api
+   npx prisma db push --schema apps/api/prisma/schema.prisma
+   ```
+5. Засидировать тестовые данные:
+   ```bash
+   npm run prisma:seed -w apps/api
+   ```
+6. Запустить frontend + backend:
+   ```bash
+   npm run dev
+   ```
 
-## Быстрый запуск
-```bash
-cp .env.example .env
-npm install
-npm run prisma:generate -w apps/api
-npm run prisma:migrate -w apps/api
-npm run prisma:seed -w apps/api
-npm run dev
-```
+## Куда заходить
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:3001/api`
+- Swagger: `http://localhost:3001/api/docs`
 
-## Демо-логин
-- Email: `mikhail@outerhaven.local`
-- Пароль: `Mikhail_OuterHaven_2026`
+## Тестовые доступы
+- Email: `admin@outerhaven.local`
+- Пароль: `Admin123!`
 
-## Docker
-```bash
-docker compose up --build
-```
-
-## API docs
-- `http://localhost:3001/api/docs`
-
-## Стратегия бэкапов
-- PostgreSQL: daily `pg_dump` + хранение в S3/объектном хранилище.
-- Ротация: 14 daily + 8 weekly.
-- Тест restore: минимум раз в месяц.
+## Краткий отчёт (для теста)
+- **Уже было:** каркас frontend/backend/db, базовые API-эндпоинты, статические страницы.
+- **Исправил:** связал UI с API, сделал рабочий вход, добавил тестового админа, обновил документацию запуска.
+- **Осталось заглушкой:** OTP и интеграционные провайдеры; мок-данные как fallback при недоступном API.
