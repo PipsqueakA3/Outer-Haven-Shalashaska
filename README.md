@@ -1,148 +1,37 @@
-# Outer Haven — MVP с рабочим модулем базы знаний
+# Outer Haven — быстрый аудит и запуск (MVP)
 
-## Что реализовано
+## Что в проекте сейчас
 
-- Рабочий вход `/login` (JWT, хеш пароля через argon2).
-- Защита внутренних страниц на frontend (проверка токена + `/api/auth/me`) и защищённые API.
-- Seed-админ:
-  - **email:** `admin@outerhaven.local`
-  - **password:** `Admin123!`
-  - **name:** `Михаил`
-  - **role:** `ADMIN`
-- Полноценный модуль **«База знаний и ссылок»**:
-  - backend CRUD + фильтры + пагинация;
-  - реальные данные в БД (Prisma);
-  - frontend со вкладками, фильтрами, таблицей/карточками, модалками, превью/fallback.
-- Foundation для RBAC: роли + role guard + поле видимости (`ADMIN_ONLY / ALL / ROLE_BASED`).
+### Структура
+- `apps/web` — фронтенд на Next.js (App Router, русский интерфейс).
+- `apps/api` — backend на NestJS + Prisma + JWT.
+- `apps/api/prisma` — схема PostgreSQL и seed.
+- `docker-compose.yml` — поднимает `db` + `api` + `web`.
 
----
+### Что реально работает
+- Авторизация: `POST /api/auth/login`, `GET /api/auth/me` (JWT).
+- API с БД: `dashboard`, `tasks`, `knowledge`, `roadmap`, `units`, `settings`.
+- Frontend подключён к API для страниц:
+  - `/dashboard`
+  - `/tasks`
+  - `/knowledge`
+  - `/roadmap` (с fallback на mock только если API недоступен)
+  - `/units`
+  - `/settings`
+- Логин-страница `/login` выполняет реальный вход и сохраняет JWT.
 
-## URL
-
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:3001/api`
-- Swagger: `http://localhost:3001/api/docs`
-- Страница входа: `http://localhost:3000/login`
-- Страница модуля: `http://localhost:3000/knowledge`
-
----
-
-## Какие страницы защищены
-
-Проверка авторизации включена для:
-
-- `/dashboard`
-- `/tasks`
-- `/roadmap`
-- `/knowledge`
-- `/units`
-- `/settings`
-
-Неавторизованный пользователь редиректится на `/login`.
+### Что пока заглушка / future-ready
+- `otp/request` в auth — placeholder.
+- Провайдеры `telegram-alerts`, `calc-engine`, `attachment-provider` — placeholder-уровень.
+- На странице roadmap есть fallback mock-данные только на случай недоступного backend API.
 
 ---
 
-## База данных: добавленные модели/поля
+## Быстрый запуск
 
-Обновлена модель `KnowledgeItem`:
-
-- `projectId` (FK на `Brand`, опционально)
-- `stageId` (FK на `Stage`, опционально)
-- `taskId` (FK на `Task`, опционально)
-- `creatorUserId` (FK на `User`, обязательно)
-- `title`, `url`, `type`
-- `comment`
-- `accessHints` (`String[]`)
-- `visibility` (`ADMIN_ONLY | ALL | ROLE_BASED`)
-- `status` (`ACTIVE | DRAFT | ARCHIVED`)
-- `priority` (`LOW | MEDIUM | HIGH | CRITICAL`)
-- `isFavorite`
-- `createdAt`, `updatedAt`
-
-Добавлены:
-
-- `Tag`
-- `KnowledgeItemTag` (m2m)
-
----
-
-## API модуля базы знаний
-
-### Материалы
-
-- `GET /api/knowledge-items`
-- `GET /api/knowledge-items/:id`
-- `POST /api/knowledge-items`
-- `PATCH /api/knowledge-items/:id`
-- `DELETE /api/knowledge-items/:id`
-- `GET /api/knowledge-items/meta/filters`
-
-### Теги
-
-- `GET /api/tags`
-- `POST /api/tags`
-
-### Query params для `GET /api/knowledge-items`
-
-- `search`
-- `type`
-- `tags` (через запятую)
-- `projectId`
-- `stageId`
-- `taskId`
-- `creatorUserId`
-- `status`
-- `isFavorite`
-- `dateFrom`
-- `dateTo`
-- `sortBy`
-- `sortOrder`
-- `page`
-- `limit`
-
-Поиск идет по `title`, `comment`, `url`, `tags`.
-
-> Сейчас CRUD ограничен ролью `ADMIN`.
-
----
-
-## Seed-данные
-
-Добавлены демо-данные:
-
-- админ `Михаил`
-- проект `Outer Haven`
-- этапы/задачи для реальных связей в селектах
-- 12 материалов базы знаний:
-  - Мудборд коллекции AW26
-  - Финмодель запуска бренда
-  - ТЗ на лекала (база)
-  - Таблица поставщиков тканей
-  - Контент-план бренда на запуск
-  - Референсы упаковки
-  - Сценарий первой съёмки
-  - Бренд-платформа (драфт)
-  - Таблица блогеров для теста
-  - Чек-лист производства образцов
-  - Таблица себестоимости капсулы
-  - Референсы визуала карточек товара
-- теги:
-  - мудборд
-  - финансы
-  - маркетинг
-  - производство
-  - контент
-  - поставщики
-  - референсы
-  - бренд
-
----
-
-## Локальный запуск
-
+### Вариант 1: локально
 ```bash
 cp .env.example .env
-cp .env apps/api/.env
 npm install
 npm run prisma:generate -w apps/api
 npm run prisma:migrate -w apps/api
@@ -150,14 +39,41 @@ npm run prisma:seed -w apps/api
 npm run dev
 ```
 
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:3001/api`
+- Swagger: `http://localhost:3001/api/docs`
+
+### Вариант 2: Docker
+```bash
+docker compose up --build
+```
+
 ---
 
-## Временные ограничения
+## Тестовый админ (seed)
+- Логин: `admin@outerhaven.local`
+- Пароль: `Admin123!`
+- Имя: `Михаил`
 
-- В текущем окружении миграции/seed требуют доступный PostgreSQL на `localhost:5432`.
-- Для удобства добавлен SQL-файл миграции, сгенерированный через `prisma migrate diff`.
+> Важно: эти учётные данные только для dev/теста.
 
+---
 
-## Временный режим доступа
+## Краткий отчёт аудита
 
-- В текущей ветке вход отключён для dev-демо: frontend не требует логин, backend `JwtAuthGuard` пропускает запросы как `ADMIN`.
+### Что уже было
+- Монорепо с готовыми `web/api`.
+- Prisma-схема и рабочие контроллеры NestJS.
+- Базовый UI со страницами и навигацией.
+
+### Что исправлено
+- Подключён frontend к реальному backend API (не только статика).
+- Добавлен рабочий логин через `/api/auth/login` с сохранением JWT.
+- Добавлен logout и состояние входа в верхнем меню.
+- Страницы сделаны интерактивными и кликабельными с загрузкой данных.
+- Обновлён seed-админ на `admin@outerhaven.local / Admin123!`.
+- Обновлён README под реальный запуск и тест.
+
+### Что осталось заглушкой
+- OTP-поток и интеграционные провайдеры (Telegram/расчёты/вложения).
+- Часть UX для roadmap при падении API уходит в mock fallback.
