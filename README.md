@@ -1,49 +1,35 @@
-# Outer Haven MVP
+# Outer Haven — быстрый аудит и запуск (MVP)
 
-## 1) Краткая архитектура
-- **Frontend**: Next.js 14 (App Router, TypeScript), адаптивный UI, модульная навигация по блокам.
-- **Backend**: NestJS + Prisma, JWT auth, защищённые API, Swagger `/api/docs`, валидация DTO.
-- **БД**: PostgreSQL (через Prisma schema), нормализованные сущности под расширение в CRM/склад/операционку.
-- **Безопасность**: Argon2 для паролей, Helmet/CORS, глобальная валидация, JWT guard, аудит-таблица.
-- **Масштабирование**: монорепо, отдельные модули, future-ready интерфейсы (Telegram, расчёты, file storage provider).
+## Что в проекте сейчас
 
-## 2) Сущности и связи
-`Brand -> Stage -> Task -> Subtask(Task.parentTaskId)`
+### Структура
+- `apps/web` — фронтенд на Next.js (App Router, русский интерфейс).
+- `apps/api` — backend на NestJS + Prisma + JWT.
+- `apps/api/prisma` — схема PostgreSQL и seed.
+- `docker-compose.yml` — поднимает `db` + `api` + `web`.
 
-Дополнительно:
-- `RoadmapBoard -> RoadmapNode` (узел можно связать с Task)
-- `KnowledgeItem` (ссылки/ресурсы, привязка к бренду/задаче)
-- `LaunchLayer` (визуальная пирамида/дерево запуска)
-- `UnitCard` (RPG-заглушка)
-- `User/Role`, `AuditLog`, `AppSetting`
+### Что реально работает
+- Авторизация: `POST /api/auth/login`, `GET /api/auth/me` (JWT).
+- API с БД: `dashboard`, `tasks`, `knowledge`, `roadmap`, `units`, `settings`.
+- Frontend подключён к API для страниц:
+  - `/dashboard`
+  - `/tasks`
+  - `/knowledge`
+  - `/roadmap` (с fallback на mock только если API недоступен)
+  - `/units`
+  - `/settings`
+- Логин-страница `/login` выполняет реальный вход и сохраняет JWT.
 
-## 3) Страницы MVP
-- `/dashboard` — прогресс бренда, ключевые этапы, сроки, пирамида.
-- `/tasks` — задачи (список/канбан-ready).
-- `/roadmap` — mind-map-like схема (React Flow).
-- `/knowledge` — база знаний/ссылок.
-- `/units` — карточки юнитов (демо).
-- `/settings` — базовые словари/placeholder настройки.
-- `/login` — демо-вход.
+### Что пока заглушка / future-ready
+- `otp/request` в auth — placeholder.
+- Провайдеры `telegram-alerts`, `calc-engine`, `attachment-provider` — placeholder-уровень.
+- На странице roadmap есть fallback mock-данные только на случай недоступного backend API.
 
-## 4) В MVP сейчас vs future-ready
-### Сейчас реализовано
-- Auth login endpoint + JWT guard.
-- CRUD задач (основа), связи subtask.
-- Dashboard summary.
-- База знаний/ссылок.
-- Roadmap board/nodes + link-to-task.
-- Unit cards UI.
-- Seed демо-данных.
-
-### Future-ready placeholders
-- Telegram alerts gateway.
-- Calculation engine.
-- Attachment/FileStorage provider (пока link-only).
-- OTP flow endpoints (placeholder).
-- RBAC foundation (enum roles + JWT payload).
+---
 
 ## Быстрый запуск
+
+### Вариант 1: локально
 ```bash
 cp .env.example .env
 npm install
@@ -53,19 +39,41 @@ npm run prisma:seed -w apps/api
 npm run dev
 ```
 
-## Демо-логин
-- Email: `mikhail@outerhaven.local`
-- Пароль: `Mikhail_OuterHaven_2026`
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:3001/api`
+- Swagger: `http://localhost:3001/api/docs`
 
-## Docker
+### Вариант 2: Docker
 ```bash
 docker compose up --build
 ```
 
-## API docs
-- `http://localhost:3001/api/docs`
+---
 
-## Стратегия бэкапов
-- PostgreSQL: daily `pg_dump` + хранение в S3/объектном хранилище.
-- Ротация: 14 daily + 8 weekly.
-- Тест restore: минимум раз в месяц.
+## Тестовый админ (seed)
+- Логин: `admin@outerhaven.local`
+- Пароль: `Admin123!`
+- Имя: `Михаил`
+
+> Важно: эти учётные данные только для dev/теста.
+
+---
+
+## Краткий отчёт аудита
+
+### Что уже было
+- Монорепо с готовыми `web/api`.
+- Prisma-схема и рабочие контроллеры NestJS.
+- Базовый UI со страницами и навигацией.
+
+### Что исправлено
+- Подключён frontend к реальному backend API (не только статика).
+- Добавлен рабочий логин через `/api/auth/login` с сохранением JWT.
+- Добавлен logout и состояние входа в верхнем меню.
+- Страницы сделаны интерактивными и кликабельными с загрузкой данных.
+- Обновлён seed-админ на `admin@outerhaven.local / Admin123!`.
+- Обновлён README под реальный запуск и тест.
+
+### Что осталось заглушкой
+- OTP-поток и интеграционные провайдеры (Telegram/расчёты/вложения).
+- Часть UX для roadmap при падении API уходит в mock fallback.

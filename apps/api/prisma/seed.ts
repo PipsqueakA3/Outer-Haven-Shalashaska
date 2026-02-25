@@ -4,13 +4,13 @@ import * as argon2 from 'argon2';
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminPassword = await argon2.hash('Mikhail_OuterHaven_2026');
+  const adminPassword = await argon2.hash('Admin123!');
 
   const admin = await prisma.user.upsert({
-    where: { email: 'mikhail@outerhaven.local' },
+    where: { email: 'admin@outerhaven.local' },
     update: {},
     create: {
-      email: 'mikhail@outerhaven.local',
+      email: 'admin@outerhaven.local',
       displayName: 'Михаил',
       passwordHash: adminPassword,
       role: 'ADMIN'
@@ -62,7 +62,7 @@ async function main() {
       type: 'OTHER',
       tags: ['мудборд', 'референсы'],
       creatorName: 'Михаил',
-      accessMeta: 'mikhail@outerhaven.local, levan@outerhaven.local'
+      accessMeta: 'admin@outerhaven.local, levan@outerhaven.local'
     }
   });
 
